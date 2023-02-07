@@ -1,6 +1,9 @@
 using System;
 using UnityEngine;
 using System.Collections;
+using System.Text;
+using GameServices;
+using Model;
 using Steamworks;
 using UnityEngine.UI;
 
@@ -26,13 +29,20 @@ public class SteamScript : MonoBehaviour
 		_lobbyDataUpdateCallback.Dispose();
 	}
 
-	void Start()
+	async void GetSteamTicket()
 	{
 		if (SteamManager.Initialized)
 		{
-			string name = SteamFriends.GetPersonaName();
-			SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypeFriendsOnly, 4);
-			Debug.Log(name);
+			//SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypeFriendsOnly, 4);
+			Byte[] ticket = new byte[1024];
+			uint sessionTicketSize;
+			HAuthTicket ticketRequest = SteamUser.GetAuthSessionTicket(ticket, 1024, out sessionTicketSize);
+			Array.Resize(ref ticket, (int)sessionTicketSize);
+			
+			string hex = BitConverter.ToString(ticket).Replace("-", "");
+			Player player = await GameService.LoginPlayer(hex);
+			
+			Debug.Log(player.Gamertag);
 		}
 	}
 
